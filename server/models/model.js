@@ -66,9 +66,9 @@ class Model {
    * during the query.
    */
   create(options) {
-    let parsedOptions = parseData(options);
-    let queryString = `INSERT INTO ${this.tablename} SET ${parsedOptions.string.join(' , ')}`;
-    return executeQuery(queryString, parsedOptions.values);
+    //let parsedOptions = parseData(options);
+    let queryString = `INSERT INTO ${this.tablename} SET ?`;//${parsedOptions.string.join(' , ')}`;
+    return executeQuery(queryString, options);
   }
 
   /**

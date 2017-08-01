@@ -2,26 +2,37 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-  console.log('********** request ', req);
   if (!req.cookies.shortlyid) {
-    console.log('****** body ', req.body);
-    models.Users.find(req.body.username)
-    .then((userEntry) => {
-      console.log('******* userEntry ', userEntry.id);
+    models.Sessions.create()
+    .then((result) => {
+      return result.insertId;
+    })
+    .then((id) => {
+      return models.Sessions.get({id});
+    })
+    .then((session) => {
+      req.session = {'hash': session.hash};
+      res.cookies = {'shortlyid': {'value': session.hash}};
+      next();
     });
-    // models.Sessions.create(userId)
-    // .then(() => {
-    //   var userId = models.Users.find(req.body.username).id;
-    //   console.log('entered first then statement');
-    //   console.log('******* userId ', userId);
-    //   return models.Sessions.get({userId});
-    // })
-    // .then((results) => {
-    //   console.log('******** results ', results);
-    //   req.session = results;
-    // });
+  } else {
+    req.session = {};
+    var hash = req.cookies.shortlyid;
+    models.Sessions.get({hash})
+    .then((session) => {
+      if (!session) {
+        req.cookies.shortlyid = undefined;
+        module.exports.createSession(req, res, next);
+      } else if (session.user) {
+        req.session.user = {'username': session.user.username};
+        req.session.userId = session.user.id;
+        req.session.hash = req.cookies.shortlyid;
+      } else {
+        req.session.hash = req.cookies.shortlyid;
+      }
+      next();
+    });
   }
-  next();
 };
 
 /************************************************************/

@@ -383,6 +383,7 @@ describe('', function() {
           expect(session.hash).to.exist;
           done();
         });
+        
       });
 
       it('sets a new cookie on the response when a session is initialized', function(done) {
