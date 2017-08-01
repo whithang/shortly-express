@@ -5,6 +5,7 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
+const Cookie = require('./middleware/cookieParser');
 
 const app = express();
 
@@ -15,7 +16,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
+var headers = {'Content-Type': 'application/json'};
 
+app.all('/', (req, res, next) => {
+  Cookie(req, res, next);
+});
+
+app.all('/', (req, res, next) => {
+  Auth.createSession(req, res, next);
+});
 
 app.get('/', 
 (req, res) => {
@@ -81,10 +90,12 @@ app.post('/links',
 app.post('/signup', (req, res, next) => {
   models.Users.find(req.body.username).then((results) => {
     if (results !== undefined) {
-      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/signup'});
+      res.append('Location', '/signup');
+      res.writeHead(201, headers);
     } else {
       models.Users.create({username: req.body.username, password: req.body.password});
-      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/'});
+      res.append('Location', '/');
+      res.writeHead(201, headers);
     }
     res.end();
     next();
@@ -94,13 +105,16 @@ app.post('/signup', (req, res, next) => {
 app.post('/login', (req, res, next) => {
   models.Users.find(req.body.username).then((results) => {
     if (results === undefined) {
-      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/login'});
+      res.append('Location', '/login');
+      res.writeHead(201, headers);
     } else {
       var authorized = models.Users.compare(req.body.password, results.password, results.salt);
       if (authorized) {
-        res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/'});
+        res.append('Location', '/');
+        res.writeHead(201, headers);
       } else {
-        res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/login'});
+        res.append('Location', '/login');
+        res.writeHead(201, headers);
       }
     }
     res.end();

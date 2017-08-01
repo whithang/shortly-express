@@ -12,6 +12,8 @@ module.exports.createSession = (req, res, next) => {
     })
     .then((session) => {
       req.session = {'hash': session.hash};
+      
+      res.cookie('shortlyid', session.hash);//, {httpOnly: false});
       res.cookies = {'shortlyid': {'value': session.hash}};
       next();
     });
@@ -27,10 +29,13 @@ module.exports.createSession = (req, res, next) => {
         req.session.user = {'username': session.user.username};
         req.session.userId = session.user.id;
         req.session.hash = req.cookies.shortlyid;
+        res.cookie('shortlyid', session.hash, {domain: 'http://127.0.0.1:4568'});
+        next();
       } else {
         req.session.hash = req.cookies.shortlyid;
+        res.cookie('shortlyid', session.hash, {domain: 'http://127.0.0.1:4568'});
+        next();
       }
-      next();
     });
   }
 };
