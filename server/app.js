@@ -78,6 +78,35 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup', (req, res, next) => {
+  models.Users.find(req.body.username).then((results) => {
+    if (results !== undefined) {
+      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/signup'});
+    } else {
+      models.Users.create({username: req.body.username, password: req.body.password});
+      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/'});
+    }
+    res.end();
+    next();
+  });  
+});
+
+app.post('/login', (req, res, next) => {
+  models.Users.find(req.body.username).then((results) => {
+    if (results === undefined) {
+      res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/login'});
+    } else {
+      var authorized = models.Users.compare(req.body.password, results.password, results.salt);
+      if (authorized) {
+        res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/'});
+      } else {
+        res.writeHead(201, {'Content-Type': 'application/json', 'Location': '/login'});
+      }
+    }
+    res.end();
+    next();
+  });
+});
 
 
 /************************************************************/
